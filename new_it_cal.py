@@ -40,6 +40,8 @@ def calculate_tax(income):
     taxable_income = income - 75000  
     tax = 0
     actual_tax = 0
+    surcharge = 0
+    cess = 0
 
     if taxable_income > 0:
         if taxable_income <= 400000:
@@ -60,9 +62,21 @@ def calculate_tax(income):
         if taxable_income <= 1200000:
             tax = max(0, tax - 60000)
 
-        actual_tax = tax
+        # Applying Surcharge
+        if taxable_income > 5000000 and taxable_income <= 10000000:
+            surcharge = tax * 0.10
+        elif taxable_income > 10000001 and taxable_income <= 20000000:
+            surcharge = tax * 0.15
+        elif taxable_income > 20000001 and taxable_income <= 50000000:
+            surcharge = tax * 0.25
 
-    return actual_tax
+        # Calculating Health and Education Cess
+        cess = (tax) * 0.04
+
+        # Calculating Final Tax
+        actual_tax = tax + surcharge + cess
+
+    return tax, surcharge, cess, actual_tax
 
 st.title("💰 Income Tax Calculator (2025-26)")
 
@@ -76,19 +90,19 @@ with st.expander("ℹ️ Tax Information"):
 input_method = st.radio("Choose your income input method:", ["Use Slider", "Enter Manually"], index=0)
 
 if input_method == "Use Slider":
-    income = st.slider("Select your annual income (₹):", min_value=0, max_value=5000000, step=1, value=500000)
+    income = st.slider("Select your annual income (₹):", min_value=0, max_value=5000000, step=1, value=1275000)
     manual_income = None
 else:
-    manual_income = st.number_input("Enter your annual income (₹):", min_value=0, step=1000, value=500000)
+    manual_income = st.number_input("Enter your annual income (₹):", min_value=0, step=1000, value=1275000)
     income = None
 
 final_income = manual_income if manual_income is not None else income
 
-tax_amount = calculate_tax(final_income)
+tax, surcharge, cess, total_tax = calculate_tax(final_income)
 
 st.markdown(f"""
     <div class="tax-box">
-        📌 Your calculated tax: ₹{tax_amount:,.2f}
+        📌 Your calculated tax: ₹{total_tax:,.2f}
     </div>
 """, unsafe_allow_html=True)
 
@@ -97,5 +111,9 @@ st.markdown(f"""
         📝 Tax Breakdown:
         <br> - Standard Deduction: ₹75,000
         <br> - Taxable Income: ₹{final_income - 75000:,.2f}
+        <br> - Computed Tax Before Surcharge & Cess: ₹{tax:,.2f}
+        <br> - Surcharge: ₹{surcharge:,.2f}
+        <br> - Health and Education Cess: ₹{cess:,.2f}
+        <br> - Total tax = Computed Tax + Surcharge + Cess
     </div>
 """, unsafe_allow_html=True)
